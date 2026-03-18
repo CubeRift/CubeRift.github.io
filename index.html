@@ -445,14 +445,13 @@
 
 <div id="toast"></div>
 
+<script src="config.js"></script>
 <script>
-  // ─── CONFIG ──────────────────────────────────────────────────────────────
-  // Replace YOUR_TOKEN_HERE with your GitHub Personal Access Token (gist scope)
-  const GITHUB_TOKEN = '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';
+  // Token loaded from config.js — edit that file to update your token
+  const GITHUB_TOKEN = (typeof CONFIG_TOKEN !== 'undefined' && CONFIG_TOKEN !== 'YOUR_TOKEN_HERE') ? CONFIG_TOKEN : '';
   const GIST_TAG     = '[CodeVault]';
   const LOGIN_USER   = 'razon';
   const LOGIN_PASS   = 'razon@2007';
-  // ─────────────────────────────────────────────────────────────────────────
 
   let allFiles    = [];
   let vaultLoaded = false;
