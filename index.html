@@ -284,70 +284,109 @@
 <div id="modal-root"></div>
 
 <script>
-  var WORKER_URL = 'https://codevault-proxy.cuberift.workers.dev';
-  var GIST_TAG   = '[CodeVault]';
-  var LOGIN_USER = 'razon';
-  var LOGIN_PASS = 'razon@2007';
-  var LS_KEY     = 'cv_folders_v2';
+  var WORKER_URL  = 'https://codevault-proxy.cuberift.workers.dev';
+  var GIST_TAG    = '[CodeVault]';
+  var CONFIG_TAG  = '[CodeVault-Config]';
+  var LOGIN_USER  = 'razon';
+  var LOGIN_PASS  = 'razon@2007';
 
   var allFiles    = [];
   var vaultLoaded = false;
   var currentView = 'folder';
 
-  // ─── FOLDER STORE (localStorage) ─────────────────────────────────────────────
-  function loadStore() {
-    try { return JSON.parse(localStorage.getItem(LS_KEY)) || {folders:{},fileMap:{}}; }
-    catch(e) { return {folders:{},fileMap:{}}; }
+  // ─── FOLDER STORE (GitHub Gist-backed — syncs across all devices) ─────────────
+  // One special private gist tagged [CodeVault-Config] holds the folder
+  // structure as JSON. Read on login; patched on every change.
+
+  var _store     = {folders:{}, fileMap:{}};
+  var _configId  = null;
+  var _saving    = false;
+  var _saveQueue = false;
+
+  function getStore() { return _store; }
+
+  function saveStore() {
+    if (_saving) { _saveQueue = true; return; }
+    _saving = true;
+    var payload = JSON.stringify(_store);
+    var req = _configId
+      ? ghFetch(WORKER_URL+'/gists/'+_configId, {
+          method:'PATCH',
+          body: JSON.stringify({files:{'codevault_config.json':{content:payload}}})
+        })
+      : ghFetch(WORKER_URL+'/gists', {
+          method:'POST',
+          body: JSON.stringify({description:CONFIG_TAG,public:false,
+            files:{'codevault_config.json':{content:payload}}})
+        }).then(function(r){ return r.json().then(function(d){_configId=d.id;}); });
+
+    req.catch(function(){ toast('Config save failed.','error'); })
+       .finally(function(){
+         _saving=false;
+         if(_saveQueue){_saveQueue=false;saveStore();}
+       });
   }
-  function saveStore(s) { localStorage.setItem(LS_KEY, JSON.stringify(s)); }
-  function getStore() { return loadStore(); }
+
+  function loadConfig() {
+    return ghFetch(WORKER_URL+'/gists?per_page=100')
+      .then(function(r){ return r.json(); })
+      .then(function(list){
+        var cfg=list.find(function(g){ return g.description===CONFIG_TAG; });
+        if(!cfg) return;
+        _configId=cfg.id;
+        return ghFetch(WORKER_URL+'/gists/'+cfg.id)
+          .then(function(r){ return r.json(); })
+          .then(function(d){
+            try { _store=JSON.parse(Object.values(d.files)[0].content)||{folders:{},fileMap:{}}; }
+            catch(e){ _store={folders:{},fileMap:{}}; }
+          });
+      })
+      .catch(function(){ _store={folders:{},fileMap:{}}; });
+  }
+
   function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 
   function createFolder(name, parentId) {
-    var s=getStore(), id=uid();
-    s.folders[id]={id:id,name:name,parentId:parentId||null,children:[]};
-    if(parentId && s.folders[parentId]){
-      s.folders[parentId].children=s.folders[parentId].children||[];
-      s.folders[parentId].children.push(id);
+    var id=uid();
+    _store.folders[id]={id:id,name:name,parentId:parentId||null,children:[]};
+    if(parentId && _store.folders[parentId]){
+      _store.folders[parentId].children=_store.folders[parentId].children||[];
+      _store.folders[parentId].children.push(id);
     }
-    saveStore(s); return id;
+    saveStore(); return id;
   }
 
   function renameFolder(id,name){
-    var s=getStore();
-    if(s.folders[id]){s.folders[id].name=name;saveStore(s);}
+    if(_store.folders[id]){_store.folders[id].name=name; saveStore();}
   }
 
   function deleteFolder(id){
-    var s=getStore();
     function recurse(fid){
-      var f=s.folders[fid]; if(!f)return;
+      var f=_store.folders[fid]; if(!f)return;
       (f.children||[]).forEach(recurse);
-      Object.keys(s.fileMap).forEach(function(gid){if(s.fileMap[gid]===fid)s.fileMap[gid]=null;});
-      delete s.folders[fid];
+      Object.keys(_store.fileMap).forEach(function(gid){if(_store.fileMap[gid]===fid)_store.fileMap[gid]=null;});
+      delete _store.folders[fid];
     }
-    var folder=s.folders[id];
-    if(folder&&folder.parentId&&s.folders[folder.parentId]){
-      s.folders[folder.parentId].children=(s.folders[folder.parentId].children||[]).filter(function(c){return c!==id;});
+    var folder=_store.folders[id];
+    if(folder&&folder.parentId&&_store.folders[folder.parentId]){
+      _store.folders[folder.parentId].children=(_store.folders[folder.parentId].children||[]).filter(function(c){return c!==id;});
     }
-    recurse(id); saveStore(s);
+    recurse(id); saveStore();
   }
 
   function moveFile(gistId,folderId){
-    var s=getStore(); s.fileMap[gistId]=folderId||null; saveStore(s);
+    _store.fileMap[gistId]=folderId||null; saveStore();
   }
 
   function getRootFolders(){
-    var s=getStore();
-    return Object.values(s.folders).filter(function(f){return !f.parentId;});
+    return Object.values(_store.folders).filter(function(f){return !f.parentId;});
   }
   function getChildFolders(parentId){
-    var s=getStore();
-    return Object.values(s.folders).filter(function(f){return f.parentId===parentId;});
+    return Object.values(_store.folders).filter(function(f){return f.parentId===parentId;});
   }
   function getFolderPath(id){
-    var s=getStore(),parts=[],cur=id;
-    while(cur&&s.folders[cur]){parts.unshift(s.folders[cur].name);cur=s.folders[cur].parentId;}
+    var parts=[],cur=id;
+    while(cur&&_store.folders[cur]){parts.unshift(_store.folders[cur].name);cur=_store.folders[cur].parentId;}
     return parts;
   }
   function countSubItems(folderId,list,s){
@@ -396,7 +435,8 @@
       sessionStorage.setItem('cv_auth','1');
       document.getElementById('login-screen').style.display='none';
       document.getElementById('app').style.display='block';
-      showPage('upload');
+      // load remote config first, then show upload page
+      loadConfig().then(function(){ showPage('upload'); populateFolderSelect(null); });
     } else {
       err.style.display='block'; err.style.animation='none';
       setTimeout(function(){err.style.animation='shake 0.3s ease';},10);
@@ -426,7 +466,7 @@
     if(sessionStorage.getItem('cv_auth')==='1'){
       document.getElementById('login-screen').style.display='none';
       document.getElementById('app').style.display='block';
-      showPage('upload');
+      loadConfig().then(function(){ showPage('upload'); populateFolderSelect(null); });
     }
   };
 
@@ -486,10 +526,13 @@
       .then(function(res){
         if(!res.ok){document.getElementById('files-list').innerHTML='<div class="empty-state"><div class="icon">&#128273;</div><p>Could not load vault.<br>Check your Cloudflare Worker token.</p></div>';return;}
         res.json().then(function(batch){
-          var mine=batch.filter(function(g){return g.description&&g.description.indexOf(GIST_TAG)===0;});
+          var mine=batch.filter(function(g){return g.description&&g.description.indexOf(GIST_TAG)===0&&g.description.indexOf(CONFIG_TAG)<0;});
+          // back-compat: sync any {f:id} tags in descriptions → fileMap if not already set
           mine.forEach(function(g){
-            var m=g.description.match(/\{f:([a-z0-9]+)\}/);
-            if(m){var s=getStore();if(s.folders[m[1]]){s.fileMap[g.id]=m[1];saveStore(s);}}
+            if(!_store.fileMap[g.id]){
+              var m=g.description.match(/\{f:([a-z0-9]+)\}/);
+              if(m&&_store.folders[m[1]])_store.fileMap[g.id]=m[1];
+            }
           });
           var combined=acc.concat(mine);
           if(batch.length<100){
@@ -501,9 +544,8 @@
   }
   function reloadVault(){vaultLoaded=false;loadFiles();}
   function updateStats(){
-    var s=getStore();
     document.getElementById('stat-count').textContent=allFiles.length;
-    document.getElementById('stat-folders').textContent=Object.keys(s.folders).length;
+    document.getElementById('stat-folders').textContent=Object.keys(_store.folders).length;
     document.getElementById('stats-bar').style.display=allFiles.length?'flex':'none';
   }
   function filterFiles(){
@@ -557,7 +599,7 @@
   }
 
   function renderFolderTree(parentId,list){
-    var s=getStore(),html='';
+    var s=_store,html='';
     var folders=parentId===null?getRootFolders():getChildFolders(parentId);
 
     folders.forEach(function(folder){
@@ -586,7 +628,7 @@
 
     // unassigned only at root
     if(parentId===null){
-      var unassigned=list.filter(function(g){return !s.fileMap[g.id];});
+      var unassigned=list.filter(function(g){return !_store.fileMap[g.id];});
       if(unassigned.length){
         var sid='fld-__unc__';
         html+='<div class="folder-group">'+
@@ -616,8 +658,7 @@
   function closeModal(){document.getElementById('modal-root').innerHTML='';}
 
   function openNewFolderModal(parentId){
-    var s=getStore();
-    var parentName=parentId?(s.folders[parentId]||{}).name:null;
+    var parentName=parentId?(_store.folders[parentId]||{}).name:null;
     document.getElementById('modal-root').innerHTML=
       '<div class="modal-overlay" onclick="if(event.target===this)closeModal()">'+
         '<div class="modal-box">'+
@@ -643,7 +684,7 @@
   }
 
   function openRenameFolderModal(folderId){
-    var folder=getStore().folders[folderId]; if(!folder)return;
+    var folder=_store.folders[folderId]; if(!folder)return;
     document.getElementById('modal-root').innerHTML=
       '<div class="modal-overlay" onclick="if(event.target===this)closeModal()">'+
         '<div class="modal-box">'+
@@ -668,7 +709,7 @@
   }
 
   function confirmDeleteFolder(folderId){
-    var folder=getStore().folders[folderId]; if(!folder)return;
+    var folder=_store.folders[folderId]; if(!folder)return;
     document.getElementById('modal-root').innerHTML=
       '<div class="modal-overlay" onclick="if(event.target===this)closeModal()">'+
         '<div class="modal-box">'+
@@ -687,7 +728,7 @@
   }
 
   function openMoveModal(gistId){
-    var s=getStore(),currentFid=s.fileMap[gistId]||null;
+    var currentFid=_store.fileMap[gistId]||null;
     var g=allFiles.find(function(x){return x.id===gistId;});
     var fname=g?Object.keys(g.files)[0]:gistId;
     window._moveTarget=currentFid;
@@ -764,7 +805,7 @@
     ghFetch(WORKER_URL+'/gists/'+id,{method:'DELETE'}).then(function(res){
       if(res.status===204){
         allFiles=allFiles.filter(function(g){return g.id!==id;});
-        var s=getStore();delete s.fileMap[id];saveStore(s);
+        delete _store.fileMap[id]; saveStore();
         updateStats();filterFiles();toast('Deleted.','info');
       } else {toast('Delete failed.','error');}
     }).catch(function(){toast('Network error.','error');});
