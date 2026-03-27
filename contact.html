@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contact Us — CodeVault</title>
+  <meta name="description" content="Get in touch with the CodeVault team. Report bugs, suggest features, or ask questions."/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --accent1:#7b2fff;--accent2:#ff2fa0;--accent3:#00e5ff;
+      --glass:rgba(255,255,255,0.04);--glass-border:rgba(255,255,255,0.10);
+      --text:#f0eeff;--muted:rgba(200,190,255,0.5);
+      --danger:#ff4d6a;
+      --sans:'Syne',sans-serif;--body:'Inter',sans-serif;
+    }
+    html,body{min-height:100vh;background:#080816;font-family:var(--body);color:var(--text);overflow-x:hidden}
+    .bg-layer{position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:radial-gradient(ellipse at 20% 20%,#1a0533 0%,transparent 60%),
+                 radial-gradient(ellipse at 80% 80%,#001a3a 0%,transparent 60%),#080816}
+    .blob{position:fixed;border-radius:50%;filter:blur(80px);opacity:0.3;z-index:0;pointer-events:none}
+    .blob1{width:500px;height:500px;background:radial-gradient(circle,#7b2fff,#ff2fa0);top:-120px;left:-120px;animation:blobMove1 12s ease-in-out infinite}
+    .blob2{width:420px;height:420px;background:radial-gradient(circle,#00e5ff,#7b2fff);bottom:-100px;right:-100px;animation:blobMove2 15s ease-in-out infinite}
+    @keyframes blobMove1{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(60px,-40px) scale(1.1)}66%{transform:translate(-30px,50px) scale(0.95)}}
+    @keyframes blobMove2{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(-50px,60px) scale(1.08)}66%{transform:translate(40px,-30px) scale(0.97)}}
+    .grid-layer{position:fixed;inset:0;z-index:0;pointer-events:none;
+      background-image:linear-gradient(rgba(123,47,255,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(123,47,255,0.05) 1px,transparent 1px);
+      background-size:48px 48px}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+    @keyframes popIn{from{opacity:0;transform:scale(0.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+
+    /* TOPBAR */
+    .topbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+      padding:14px 32px;background:rgba(8,8,22,0.85);backdrop-filter:blur(20px);
+      border-bottom:1px solid rgba(255,255,255,0.06)}
+    .topbar-brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--text)}
+    .topbar-logo{width:34px;height:34px;background:linear-gradient(135deg,var(--accent1),var(--accent2));
+      border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;
+      box-shadow:0 4px 14px rgba(123,47,255,0.4);flex-shrink:0}
+    .topbar-name{font-family:var(--sans);font-weight:800;font-size:1.05rem}
+    .topbar-nav{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .nav-link{padding:7px 14px;border-radius:8px;font-size:0.78rem;color:var(--muted);text-decoration:none;transition:all 0.2s;border:1px solid transparent}
+    .nav-link:hover{color:var(--text);background:rgba(255,255,255,0.05)}
+    .nav-link.active{color:#c9a0ff;background:rgba(123,47,255,0.12);border-color:rgba(123,47,255,0.25)}
+    .btn-nav{padding:8px 18px;border-radius:9px;font-size:0.78rem;font-weight:600;
+      position:relative;overflow:hidden;border:none;
+      background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#fff;
+      text-decoration:none;font-family:var(--body);transition:transform 0.15s,box-shadow 0.2s;
+      box-shadow:0 3px 16px rgba(123,47,255,0.35)}
+    .btn-nav::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);background-size:200% 100%;animation:shimmer 2.5s linear infinite}
+    .btn-nav:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(123,47,255,0.5)}
+
+    /* PAGE */
+    .page-wrap{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:0 24px 100px}
+
+    /* HERO */
+    .page-hero{text-align:center;padding:64px 20px 52px;animation:fadeUp 0.6s ease both}
+    .page-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:99px;
+      background:rgba(123,47,255,0.12);border:1px solid rgba(123,47,255,0.28);
+      font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:#c9a0ff;margin-bottom:20px}
+    .badge-dot{width:7px;height:7px;background:var(--accent1);border-radius:50%;animation:pulse 2s infinite}
+    .page-hero h1{font-family:var(--sans);font-size:clamp(2rem,5vw,3rem);font-weight:800;letter-spacing:-0.03em;line-height:1.1;
+      background:linear-gradient(135deg,#fff 30%,#c9a0ff 65%,var(--accent2));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:14px}
+    .page-hero p{font-size:0.95rem;color:var(--muted);max-width:480px;margin:0 auto;line-height:1.75;font-weight:300}
+
+    /* SECTION */
+    .section{background:var(--glass);border:1px solid var(--glass-border);border-radius:20px;padding:36px 40px;margin-bottom:24px;
+      position:relative;backdrop-filter:blur(16px);animation:fadeUp 0.5s ease both}
+    .section::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+      width:50%;height:1px;background:linear-gradient(90deg,transparent,rgba(123,47,255,0.5),transparent)}
+    .section h2{font-family:var(--sans);font-size:1.15rem;font-weight:800;margin-bottom:18px;
+      background:linear-gradient(135deg,#fff,#c9a0ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+    /* CONTACT CARDS */
+    .contact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:28px}
+    .contact-card{background:rgba(123,47,255,0.06);border:1px solid rgba(123,47,255,0.14);border-radius:14px;padding:24px 20px;
+      text-align:center;transition:border-color 0.2s,background 0.2s}
+    .contact-card:hover{border-color:rgba(123,47,255,0.3);background:rgba(123,47,255,0.1)}
+    .contact-icon{font-size:2rem;margin-bottom:12px}
+    .contact-title{font-family:var(--sans);font-size:0.85rem;font-weight:700;color:#c9a0ff;margin-bottom:6px}
+    .contact-val{font-size:0.8rem;color:var(--muted);line-height:1.6}
+    .contact-val a{color:#c9a0ff;text-decoration:none}
+    .contact-val a:hover{text-decoration:underline}
+    .contact-note{font-size:0.7rem;color:rgba(200,190,255,0.35);margin-top:4px}
+
+    /* FORM */
+    .form-field{margin-bottom:18px}
+    .form-field label{display:block;font-size:0.65rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;font-weight:500;margin-bottom:8px}
+    .form-field input,.form-field textarea,.form-field select{
+      width:100%;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+      border-radius:12px;color:var(--text);font-family:var(--body);font-size:0.88rem;outline:none;transition:all 0.25s}
+    .form-field input::placeholder,.form-field textarea::placeholder{color:rgba(200,190,255,0.25)}
+    .form-field input:focus,.form-field textarea:focus,.form-field select:focus{
+      background:rgba(123,47,255,0.1);border-color:rgba(123,47,255,0.5);box-shadow:0 0 0 3px rgba(123,47,255,0.1)}
+    .form-field input:hover:not(:focus),.form-field textarea:hover:not(:focus){border-color:rgba(255,255,255,0.18);background:rgba(255,255,255,0.07)}
+    .form-field textarea{height:140px;resize:vertical;line-height:1.6}
+    .form-field select{appearance:none;-webkit-appearance:none;cursor:pointer;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23c9a0ff' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+    .form-field select option{background:#120824}
+    .form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    @media(max-width:540px){.form-grid-2{grid-template-columns:1fr}}
+    .btn-submit{width:100%;padding:14px;border-radius:12px;font-size:0.92rem;font-weight:700;cursor:pointer;
+      position:relative;overflow:hidden;border:none;font-family:var(--sans);
+      background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#fff;
+      box-shadow:0 4px 24px rgba(123,47,255,0.4);transition:transform 0.15s,box-shadow 0.2s;margin-top:6px}
+    .btn-submit::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);background-size:200% 100%;animation:shimmer 2.5s linear infinite}
+    .btn-submit:hover{transform:translateY(-2px);box-shadow:0 8px 36px rgba(123,47,255,0.5)}
+    .btn-submit:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+
+    /* SUCCESS */
+    .success-box{display:none;text-align:center;padding:32px;border-radius:14px;
+      background:rgba(0,229,120,0.08);border:1px solid rgba(0,229,120,0.22);animation:popIn 0.4s ease both}
+    .success-box .icon{font-size:2.5rem;margin-bottom:12px}
+    .success-box h3{font-family:var(--sans);font-size:1.1rem;font-weight:800;color:#7effcc;margin-bottom:8px}
+    .success-box p{font-size:0.82rem;color:var(--muted);line-height:1.7}
+
+    /* FAQ */
+    .faq-item{border-bottom:1px solid rgba(255,255,255,0.06);padding:18px 0}
+    .faq-item:last-child{border-bottom:none;padding-bottom:0}
+    .faq-q{font-size:0.9rem;font-weight:600;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .faq-q:hover{color:#c9a0ff}
+    .faq-arrow{font-size:0.75rem;color:var(--muted);transition:transform 0.2s;flex-shrink:0}
+    .faq-a{font-size:0.82rem;color:var(--muted);line-height:1.8;display:none}
+    .faq-item.open .faq-arrow{transform:rotate(90deg)}
+    .faq-item.open .faq-a{display:block}
+
+    /* FOOTER */
+    .footer{position:relative;z-index:1;text-align:center;padding:36px 24px 24px;
+      border-top:1px solid rgba(255,255,255,0.06);margin-top:20px}
+    .footer-links{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+    .footer-links a{font-size:0.78rem;color:var(--muted);text-decoration:none;padding:5px 12px;border-radius:7px;transition:all 0.2s}
+    .footer-links a:hover{color:#c9a0ff;background:rgba(123,47,255,0.1)}
+    .footer-links a.active{color:#c9a0ff}
+    .footer p{font-size:0.72rem;color:rgba(200,190,255,0.3)}
+
+    @media(max-width:640px){
+      .topbar{padding:12px 16px}
+      .section{padding:24px 20px}
+      .page-wrap{padding:0 14px 80px}
+    }
+  </style>
+</head>
+<body>
+<div class="bg-layer"></div>
+<div class="blob blob1"></div>
+<div class="blob blob2"></div>
+<div class="grid-layer"></div>
+
+<!-- TOPBAR -->
+<nav class="topbar">
+  <a class="topbar-brand" href="public.html">
+    <div class="topbar-logo">⍟</div>
+    <span class="topbar-name">CodeVault</span>
+  </a>
+  <div class="topbar-nav">
+    <a class="nav-link" href="public.html">Browse</a>
+    <a class="nav-link" href="about.html">About</a>
+    <a class="nav-link active" href="contact.html">Contact</a>
+    <a class="nav-link" href="index.html">Sign In</a>
+  </div>
+</nav>
+
+<div class="page-wrap">
+
+  <!-- HERO -->
+  <div class="page-hero">
+    <div class="page-badge"><span class="badge-dot"></span> We're here to help</div>
+    <h1>Get in Touch</h1>
+    <p>Found a bug, have a suggestion, or just want to say hi? We read every message.</p>
+  </div>
+
+  <!-- CONTACT OPTIONS -->
+  <div class="section" style="animation-delay:0.1s">
+    <h2>How to Reach Us</h2>
+    <div class="contact-grid">
+      <div class="contact-card">
+        <div class="contact-icon">📧</div>
+        <div class="contact-title">Email</div>
+        <div class="contact-val">
+          <a href="mailto:hello@codevault.app">hello@codevault.app</a>
+          <div class="contact-note">Response within 48 hours</div>
+        </div>
+      </div>
+      <div class="contact-card">
+        <div class="contact-icon">🐛</div>
+        <div class="contact-title">Bug Reports</div>
+        <div class="contact-val">
+          Use the form below and select "Bug Report"
+          <div class="contact-note">We fix critical bugs within 24h</div>
+        </div>
+      </div>
+      <div class="contact-card">
+        <div class="contact-icon">💡</div>
+        <div class="contact-title">Feature Ideas</div>
+        <div class="contact-val">
+          Send us your suggestions — we build what students need
+          <div class="contact-note">All ideas are read and considered</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTACT FORM -->
+  <div class="section" style="animation-delay:0.15s">
+    <h2>Send a Message</h2>
+
+    <div id="contact-form">
+      <div class="form-grid-2">
+        <div class="form-field">
+          <label>Your Name</label>
+          <input type="text" id="cf-name" placeholder="Alex Johnson"/>
+        </div>
+        <div class="form-field">
+          <label>Email Address</label>
+          <input type="email" id="cf-email" placeholder="you@email.com"/>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Topic</label>
+        <select id="cf-topic">
+          <option value="">Select a topic...</option>
+          <option>Bug Report</option>
+          <option>Feature Request</option>
+          <option>Account Issue</option>
+          <option>Code Request</option>
+          <option>Partnership / Collaboration</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Message</label>
+        <textarea id="cf-msg" placeholder="Describe your issue or idea in detail..."></textarea>
+      </div>
+      <button class="btn-submit" id="cf-submit" onclick="submitForm()">Send Message →</button>
+    </div>
+
+    <div class="success-box" id="success-box">
+      <div class="icon">✅</div>
+      <h3>Message sent!</h3>
+      <p>Thanks for reaching out. We'll get back to you within 48 hours.<br>In the meantime, check out the FAQ below.</p>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="section" style="animation-delay:0.2s">
+    <h2>Frequently Asked Questions</h2>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Is CodeVault completely free? <span class="faq-arrow">▶</span></div>
+      <div class="faq-a">Yes. Creating an account, uploading code, and organising your vault with folders is 100% free with no limits. The public browse page shows small ads to cover hosting costs — your private vault has no ads.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Who can see my uploaded code? <span class="faq-arrow">▶</span></div>
+      <div class="faq-a">Only you can see your private vault. Code only appears on the public browse page if it's tagged for public sharing. We never expose private gists without your action.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Can I delete my account and data? <span class="faq-arrow">▶</span></div>
+      <div class="faq-a">Yes. Send us an email with your username and we will remove your account credentials and all associated code from the system within 7 days.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">What happens if I forget my password? <span class="faq-arrow">▶</span></div>
+      <div class="faq-a">Contact us with your username and we can reset your account. Since passwords are hashed we cannot retrieve the original, but we can create a new one for you after verifying your identity.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Can I request a specific lab program? <span class="faq-arrow">▶</span></div>
+      <div class="faq-a">Absolutely — use the contact form above and select "Code Request". We'll try to add it to the public library or point you to an existing snippet.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Is the code checked for correctness? <span class="faq-arrow">▶</span></div>
+      <div class="faq-a">Code in the public library is uploaded by students and is not formally reviewed or guaranteed to be error-free. Always test code before submitting it in your lab. Use it as a reference, not a copy-paste solution.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-links">
+    <a href="public.html">Browse Code</a>
+    <a href="about.html">About Us</a>
+    <a href="contact.html" class="active">Contact</a>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="terms.html">Terms &amp; Conditions</a>
+    <a href="index.html">Sign In</a>
+  </div>
+  <p>© 2025 CodeVault · Free Lab Code Library · All rights reserved</p>
+</footer>
+
+<script>
+  function submitForm(){
+    var name  = document.getElementById('cf-name').value.trim();
+    var email = document.getElementById('cf-email').value.trim();
+    var topic = document.getElementById('cf-topic').value;
+    var msg   = document.getElementById('cf-msg').value.trim();
+    if(!name||!email||!topic||!msg){
+      alert('Please fill in all fields before sending.');return;
+    }
+    // Opens default mail client with pre-filled content
+    var subject = encodeURIComponent('[CodeVault] '+topic+' from '+name);
+    var body    = encodeURIComponent('Name: '+name+'\nEmail: '+email+'\nTopic: '+topic+'\n\nMessage:\n'+msg);
+    window.location.href = 'mailto:hello@codevault.app?subject='+subject+'&body='+body;
+    // Show success state
+    document.getElementById('contact-form').style.display='none';
+    document.getElementById('success-box').style.display='block';
+  }
+
+  function toggleFaq(el){
+    el.classList.toggle('open');
+  }
+</script>
+</body>
+</html>
