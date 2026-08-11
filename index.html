@@ -75,9 +75,11 @@ h1,h2,h3{font-family:'Syne',sans-serif;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
 @media(max-width:600px){.form-row{grid-template-columns:1fr;}}
 .field label{display:block;font-size:0.7rem;color:var(--muted);margin-bottom:8px;font-weight:500;}
-.field input,.field textarea,.field select{width:100%;border:none;background:transparent;color:var(--text);
+.field input,.field textarea,.field select,
+input[type="text"],textarea,select{width:100%;border:none;background:transparent;color:var(--text);
   font-family:'Inter',sans-serif;font-size:0.88rem;padding:13px 16px;border-radius:14px;outline:none;
   box-shadow:inset 5px 5px 10px var(--sh-d),inset -5px -5px 10px var(--sh-l);}
+input[type="text"]:focus,textarea:focus,select:focus{outline:none;box-shadow:inset 5px 5px 10px var(--sh-d),inset -5px -5px 10px var(--sh-l);}
 .field input::placeholder,.field textarea::placeholder{color:var(--muted);opacity:.7;}
 .field textarea{min-height:220px;font-family:'JetBrains Mono',monospace;font-size:0.82rem;resize:vertical;line-height:1.6;}
 .form-footer{display:flex;justify-content:space-between;align-items:center;margin-top:16px;flex-wrap:wrap;gap:12px;}
@@ -143,6 +145,18 @@ h1,h2,h3{font-family:'Syne',sans-serif;}
   .topbar{flex-wrap:wrap;margin:12px 12px 0;padding:10px 14px;}
   .tabs{order:3;width:100%;justify-content:center;}
   .wrap{padding:20px 12px 0;}
+  .panel{padding:20px 16px;}
+  .browse-controls{padding:16px;}
+}
+@media(max-width:560px){
+  .snip-header{flex-wrap:wrap;row-gap:10px;padding:14px 16px;}
+  .snip-icon{order:1;}
+  .snip-info{order:2;flex:1 1 55%;min-width:100px;}
+  .chev{order:3;}
+  .snip-lang{order:4;}
+  .snip-actions{order:5;margin-left:auto;}
+  .code-block{margin:0 16px 16px;}
+  .btn-ghost,.btn-danger{padding:7px 12px;font-size:0.68rem;}
 }
 </style>
 </head>
@@ -220,7 +234,8 @@ h1,h2,h3{font-family:'Syne',sans-serif;}
 
 <script>
 var WORKER_URL='https://codevault-proxy.cuberift.workers.dev';
-var GIST_TAG='[CV]'; // public, no-auth tag — all uploads share this pool
+var GIST_TAG='[CodeVault]'; // same tag the old app used, so previously-saved snippets still show up
+var CONFIG_PREFIX='[CodeVault-'; // internal gists (old user registry / folder config) — never show these as snippets
 
 var allSnippets=[], filtered=[], activeLang='all', PAGE_SIZE=15, currentPage=1;
 
@@ -284,7 +299,7 @@ function fetchAll(page,acc){
     .then(function(r){return r.json();})
     .then(function(batch){
       var valid=(batch||[]).filter(function(g){
-        return g.description && g.description.indexOf(GIST_TAG)===0;
+        return g.description && g.description.indexOf(GIST_TAG)===0 && g.description.indexOf(CONFIG_PREFIX)!==0;
       });
       var combined=acc.concat(valid);
       if(!batch||batch.length<100){
@@ -375,7 +390,7 @@ function loadMore(){currentPage++;renderPage();}
 function cardHTML(g){
   var f=Object.values(g.files)[0];
   var lang=detectLang(f.filename);
-  var desc=g.description.replace(GIST_TAG,'').trim();
+  var desc=g.description.replace(/\[CodeVault\](\[[^\]]+\])?/,'').replace(/\{f:[a-z0-9]+\}/,'').trim();
   var date=new Date(g.updated_at).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});
   return '<div class="snippet-card neu-out" id="card-'+g.id+'">'+
     '<div class="snip-header" onclick="toggleCard(\''+g.id+'\')">'+
